@@ -7,7 +7,7 @@ import { ChatContext } from "../../context/ChatContext";
 const Sidebar = () => {
   const {
     getUsers,
-    getMessages, // ✅ Added this to use inside onClick
+    getMessages,
     users,
     selectedUser,
     setSelectedUser,
@@ -16,7 +16,9 @@ const Sidebar = () => {
   } = useContext(ChatContext);
 
   const { logout, onlineUser } = useContext(AuthContext);
-  const [input, setInput] = useState(false);
+
+  const [input, setInput] = useState("");
+  const [showMenu, setShowMenu] = useState(false); // toggle for menu dropdown
   const navigate = useNavigate();
 
   const filteredUsers = input
@@ -36,28 +38,41 @@ const Sidebar = () => {
       }`}
     >
       <div className="pb-5">
-        <div className="flex justify-between items-center">
+        {/* Logo and Menu */}
+        <div className="flex justify-between items-center relative">
           <img src={assets.logo} alt="logo" className="max-w-40" />
-          <div className="relative py-2 group">
-            <img
-              src={assets.menu_icon}
-              alt="logo"
-              className="max-h-5 cursor-pointer"
-            />
-            <div className="absolute top-full right-0 z-20 w-32 p-5 rounded-md bg-[#282142] border border-gray-600 text-gray-100 hidden group-hover:block">
+          <img
+            src={assets.menu_icon}
+            alt="menu"
+            className="max-h-5 cursor-pointer"
+            onClick={() => setShowMenu(!showMenu)}
+          />
+          {showMenu && (
+            <div className="absolute top-full right-0 z-20 w-32 p-5 rounded-md bg-[#282142] border border-gray-600 text-gray-100">
               <p
-                onClick={() => navigate("/profile")}
+                onClick={() => {
+                  navigate("/profile");
+                  setShowMenu(false);
+                }}
                 className="cursor-pointer text-sm"
               >
                 Edit Profile
               </p>
               <hr className="my-2 border-t border-gray-500" />
-              <p onClick={() => logout()} className="cursor-pointer text-sm">
+              <p
+                onClick={() => {
+                  logout();
+                  setShowMenu(false);
+                }}
+                className="cursor-pointer text-sm"
+              >
                 Logout
               </p>
             </div>
-          </div>
+          )}
         </div>
+
+        {/* Search Input */}
         <div className="bg-[#282142] rounded-full flex items-center gap-2 py-3 px-4 mt-5">
           <img src={assets.search_icon} alt="Search" className="w-3" />
           <input
@@ -68,13 +83,15 @@ const Sidebar = () => {
           />
         </div>
       </div>
+
+      {/* User List */}
       <div className="flex flex-col">
         {filteredUsers.map((user, index) => (
           <div
             onClick={() => {
               setSelectedUser(user);
-              localStorage.setItem("selectedUser", JSON.stringify(user)); // ✅ Store selected user
-              getMessages(user._id); // ✅ Load messages immediately on click
+              localStorage.setItem("selectedUser", JSON.stringify(user));
+              getMessages(user._id);
               setUnseenMessages((prev) => ({ ...prev, [user._id]: 0 }));
             }}
             key={index}
